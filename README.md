@@ -63,4 +63,3 @@ licensed as above, without any additional terms or conditions.
 [Knurling]: https://knurling.ferrous-systems.com
 [Ferrous Systems]: https://ferrous-systems.com/
 [GitHub Sponsors]: https://github.com/sponsors/knurling-rs
-[nRF52 DK](https://github.com/Dajamante/nrf52840_playground) 
