@@ -13,9 +13,9 @@ This repository is a collection of "pair" code between nRF52 (the sender) and ST
 ![](./uarte5.JPG)
 ![](./uarte6.JPG)
 
-Nucleo D8/PA9 (tx) - nRF52 p1.07 (rx)
-Nucleo D2/PA10 (rx)- nRF52 p1.08 (tx)
-GND - GND
+* Nucleo D8/PA9 (tx) - nRF52 p1.07 (rx)
+* Nucleo D2/PA10 (rx)- nRF52 p1.08 (tx)
+* GND - GND
 
 # How to run code
 
@@ -25,7 +25,7 @@ Open one terminal window *per* microcontroller and run:
 cargo rb <project name>
 ```
 
-Some programs are interracting:
+Some programs are interracting, with the nRF52 as the sender and the Nucleo as the receiver.
 
 
 |     | Interracting? | nRF52/Nucleo code   | What does it do?                                                                                                                                                                                |
