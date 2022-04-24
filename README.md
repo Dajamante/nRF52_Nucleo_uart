@@ -9,9 +9,12 @@ Based on https://github.com/knurling-rs/app-template
 This repository is a collection of "pair" code between nRF52 (the sender) and STM32F401-Nucleo (the receiver). 
 
 # Wiring
-![](./uarte1.JPG)
-![](./uarte5.JPG)
-![](./uarte6.JPG)
+
+<p align="center">
+<img src="./uarte1.JPG" width="60%">
+<img src="./uarte5.JPG" width="60%">
+<img src="./uarte6.JPG" width="60%">
+</p>
 
 * Nucleo D8/PA9 (tx) - nRF52 p1.07 (rx)
 * Nucleo D2/PA10 (rx)- nRF52 p1.08 (tx)
