@@ -6,7 +6,7 @@ This repository is a collection of uart "pair" programs between nRF52 (the sende
 
 ## UART
 <p align="center">
-<img src="./makecode_Serial_vs_parallel_transmission.jpg" width="30%">
+<img src="./assets/makecode_Serial_vs_parallel_transmission.jpg" width="40%">
 </p>
 
 Source:[AdaFruit](https://learn.adafruit.com/circuit-playground-express-serial-communications/what-is-serial-communications)
@@ -37,9 +37,9 @@ All programs in this project are done with [the Knurling App template](https://g
 * GND - GND
 
 <p align="center">
-<img src="./uarte1.JPG" width="50%">
-<img src="./uarte5.JPG" width="50%">
-<img src="./uarte6.JPG" width="50%">
+<img src="./assets/uarte1.JPG" width="50%">
+<img src="./assets/uarte5.JPG" width="50%">
+<img src="./assets/uarte6.JPG" width="50%">
 </p>
 
 
