@@ -6,7 +6,7 @@ This repository is a collection of uart "pair" programs between nRF52 (the sende
 
 ## UART
 <p align="center">
-<img src="./makecode_Serial_vs_parallel_transmission.jpg" width="40%">
+<img src="./makecode_Serial_vs_parallel_transmission.jpg" width="30%">
 </p>
 
 Source:[AdaFruit](https://learn.adafruit.com/circuit-playground-express-serial-communications/what-is-serial-communications)
@@ -19,7 +19,7 @@ The disadvantage is that it is only point-to-point, i.e. you can not talk to sev
 
 ## RTIC
 
-RTIC shines in simplifying concurrency - messages are passed between `#[task]`s with different levels of priority, guaranteeing deadlock-free and datarace free execution, and [many other garantees](https://github.com/rtic-rs/cortex-m-rtic)
+RTIC shines in simplifying concurrency - messages are passed between `#[task]`s with different levels of priority, guaranteeing deadlock-free and datarace free execution, and [many other garantees](https://github.com/rtic-rs/cortex-m-rtic).
 
 
 ## COBS and Postcard 💌
@@ -32,16 +32,17 @@ A great crate to do that is [postcard-rs](https://docs.rs/postcard/latest/postca
 All programs in this project are done with [the Knurling App template](https://github.com/knurling-rs/app-template). If you want to do your own, follow the steps in the documentation!
 
 # Wiring
-
-<p align="center">
-<img src="./uarte1.JPG" width="60%">
-<img src="./uarte5.JPG" width="60%">
-<img src="./uarte6.JPG" width="60%">
-</p>
-
 * Nucleo D8/PA9 (tx) - nRF52 p1.07 (rx)
 * Nucleo D2/PA10 (rx)- nRF52 p1.08 (tx)
 * GND - GND
+
+<p align="center">
+<img src="./uarte1.JPG" width="50%">
+<img src="./uarte5.JPG" width="50%">
+<img src="./uarte6.JPG" width="50%">
+</p>
+
+
 
 # How to run code
 
@@ -85,7 +86,7 @@ Most programs have the same name but I kept "uarte" and "usart" as this is how t
 | 3   | yes        | `uarte.rs/usart.rs` | Sending byte beer emoji back and forth: <br /> `nRF52 says: look at this 🍻 we got back!`                                                                                                       |
 | 4   | yes        | `lightning.rs`      | nRF52 is blinking the led of the nucleo 💡                                                                                                                                                      |
 | 5   | yes        | `button.rs`         | nRF52 is blinking the led of the nucleo 💡, but with a button                                                                                                                                   |
-| 6   | yes        | `postcard.rs`       | nRF52 is blinking the led of the nucleo 💡, with a [cobs](https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing) command. Using [Postcard](https://docs.rs/postcard/0.7.3/postcard/)! |
+| 6   | yes        | `postcard.rs`       | nRF52 is blinking the led of the nucleo 💡, with a proper instruction using [cobs](https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing) command. |
 | 7   | yes        | `pws.rs`            | nRF52 is dimming(*) the light of the nucleo 🔅💡🔅                                                                                                                                              |
 | 8   | yes        | `interval.rs`       | nRF52 is blinking the light of the nucleo, with intervals. The light can be dimmed 🔅💡🔅.                                                                                                      |
 
