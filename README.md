@@ -2,8 +2,18 @@
 
 # UART between nRF52/STM32F401
 
-This repository is a collection of uart "pair" programs between nRF52 (the sender) and STM32F401-Nucleo (the receiver) with increasing level of difficulty. They are built with [RTIC](https://rtic.rs/1/book/en/), a concurrency framework for Cortex-M devices.
+This repository is a collection of pairs of programs between nRF52840 DK and STM32F401-Nucleo, communiting data with UART (universal asynchronous receiver-transmitter). The nRF52840 DK is the sender and the Nucleo the receiver (reversing messages is left as an exercise to the reader 😛). 
 
+The goal of this repository is to provide simple examples, not teaching UART. The nRF52840 uses [UARTE](https://devzone.nordicsemi.com/f/nordic-q-a/62055/uart-and-uarte-difference), and the Nucleo uses USART, an UART that support synchronous operatiions as well.
+
+Those boards were chosen because they are cheap and off the shelves (translate: I had them at home). 
+
+The code snipets are in increasing level of difficulty. 
+
+## RTIC
+Code snipets use [RTIC](https://rtic.rs/1/book/en/), a concurrency framework for Cortex-M devices.
+
+RTIC shines in simplifying concurrency - messages are passed between `#[task]`s with different levels of priority, guaranteeing deadlock-free and datarace free execution, and [many other garantees](https://github.com/rtic-rs/cortex-m-rtic).
 ## UART
 <p align="center">
 <img src="./assets/makecode_Serial_vs_parallel_transmission.jpg" width="40%">
@@ -11,16 +21,55 @@ This repository is a collection of uart "pair" programs between nRF52 (the sende
 
 Source:[AdaFruit](https://learn.adafruit.com/circuit-playground-express-serial-communications/what-is-serial-communications)
 
-UART (universal asynchronous receiver-transmitter) is one of the important serial protocols to know in embedded. Others are for example SPI, I2C, USB. UART is asynchronous, i.e. it has no clock but the transmitter and receiver have agreed on a baud rate. Since they are not in sync it becomes difficult to do anything faster than 1M!
+UART (universal asynchronous receiver-transmitter) is a serial protocol. Others are for example SPI, I2C, USB. UART is asynchronous, i.e. it has no clock but the transmitter and receiver have agreed on a baud rate. Since they are not in sync it becomes difficult to do anything faster than 1M!
 
 The advantage is that both sides can initiate a transfer. On the contrary, SPI and I2C initiate a master (controller) and one or more slaves (peripheral devices). Here, only the master can initiate a transfer. 
 
 The disadvantage is that it is only point-to-point, i.e. you can not talk to several devices on a common bus as you can with SPI and I2C.
 
-## RTIC
+On the 
 
-RTIC shines in simplifying concurrency - messages are passed between `#[task]`s with different levels of priority, guaranteeing deadlock-free and datarace free execution, and [many other garantees](https://github.com/rtic-rs/cortex-m-rtic).
+## Differences between nRF52840 DK and STM32F401 Nucleo
 
+There are some differences in the hardware that are noteworthy.
+
+### Usable pins
+
+#### STM32F401
+
+![](assets/nucleo_pins.png)
+
+On the Nucleo, you must look up which functionality is available for each pin. According to the [Nucleo board manual](https://www.st.com/resource/en/user_manual/um1724-stm32-nucleo64-boards-mb1136-stmicroelectronics.pdf), you will need to use PA2 and PA3 if you want to use USART2. 
+If the docs recommends to look up the solder bridges, it is a good idea to do so. If solder bridges are open, there is no communication and the project does not work.
+
+![](assets/sb.png)
+
+In this mini projects, we are using USART1, so according to the [datasheet](https://www.st.com/resource/en/datasheet/stm32f401re.pdf) we use PA9 and PA10.
+
+Are we done?
+
+Not at all!
+
+You need to configure alternate functions. On STM32, pins can have different functions so you need to specify which function you are going to use with the alternate functions table:
+
+![](assets/af.png)
+
+So the configuration will look like this:
+
+```rust
+#[local]
+struct Local {
+    // leds, etc
+    usart: usart: Serial<USART1, (PA9<Alternate<PushPull, 7>>, PA10<Alternate<PushPull, 7>>), u8>,
+}
+```
+
+
+#### nRF52840
+
+On the nRF52840 development board, you can use any pin. Or almost any pins! [According to the connector interface](https://infocenter.nordicsemi.com/index.jsp?topic=%2Fug_nrf52840_dk%2FUG%2Fdk%2Fconnector_if.html&cp=4_0_4_7_5), some pins have default settings. Connector P6 and P24 should be avoided, as per the figure.
+
+![](assets/dk_board_connectors.svg)
 
 ## COBS and Postcard 💌
 
