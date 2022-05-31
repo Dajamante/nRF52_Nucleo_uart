@@ -1,6 +1,6 @@
 [![Build](https://github.com/Dajamante/nucleo_playground/actions/workflows/build.yml/badge.svg)](https://github.com/Dajamante/nucleo_playground/actions/workflows/build.yml)
 
-# UART between nRF52/STM32F401
+# UART between nrf52 - stm32 
 
 This repository is a collection of pairs of programs between nRF52840 DK and STM32F401-Nucleo, sending data with UART (universal asynchronous receiver-transmitter). The nRF52840 DK is the sender and the Nucleo the receiver (reversing messages is left as an exercise to the reader 😛). 
 
