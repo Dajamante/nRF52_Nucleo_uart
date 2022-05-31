@@ -6,7 +6,7 @@ This repository is a collection of pairs of programs between nRF52840 DK and STM
 
 The goal of this repository is to provide simple examples, not teaching UART. The nRF52840 uses [UARTE](https://devzone.nordicsemi.com/f/nordic-q-a/62055/uart-and-uarte-difference), and the Nucleo uses USART, an UART that support synchronous operatiions as well.
 
-Those boards were chosen because they are cheap and off the shelves (translate: I had them at home). 
+Those boards were chosen because they are cheap and off the shelves (translate: I had them at home). I use STM32F401 Nucleo but any Nucleo would work (with special caveat: look up pins, more on that in [the nucleo section](./README.md###-Nucleo).
 
 The code snipets are in increasing level of difficulty. 
 
