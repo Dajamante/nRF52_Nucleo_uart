@@ -4,7 +4,7 @@
 
 This repository is a collection of pairs of programs between nRF52840 DK and STM32F401-Nucleo, sending data with UART (universal asynchronous receiver-transmitter). The nRF52840 DK is the sender and the Nucleo the receiver (reversing messages is left as an exercise to the reader 😛). 
 
-The goal of this repository is to provide simple examples, not teaching UART. The nRF52840 uses [UARTE](https://devzone.nordicsemi.com/f/nordic-q-a/62055/uart-and-uarte-difference), and the Nucleo uses USART, an UART that support synchronous operatiions as well.
+The goal of this repository is to provide simple examples, not teaching UART. The nRF52840 uses [UARTE](https://devzone.nordicsemi.com/f/nordic-q-a/62055/uart-and-uarte-difference), and the Nucleo uses USART, an UART that support synchronous operations as well.
 
 Those boards were chosen because they are cheap and off the shelves (translate: I had them at home). I use STM32F401 Nucleo but any Nucleo would work (with special caveat: look up pins, more on that in [the nucleo section](./README.md###-Nucleo).
 
