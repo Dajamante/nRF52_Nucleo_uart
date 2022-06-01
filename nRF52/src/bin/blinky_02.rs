@@ -1,3 +1,4 @@
+//! This is the second mini-project. It is independant from it's nucleo counterpart.
 #![no_main]
 #![no_std]
 

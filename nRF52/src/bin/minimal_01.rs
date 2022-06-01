@@ -1,9 +1,10 @@
+//! This is the first mini-project. It is independant from it's nucleo counterpart.
 #![no_main]
 #![no_std]
 
-use nucleis as _; // global logger + panicking-behavior + memory layout
+use nrfie as _; // global logger + panicking-behavior + memory layout
 
-#[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART1])]
+#[rtic::app(device = nrf52840_hal::pac, dispatchers=[UARTE1])]
 mod app {
 
     #[shared]
@@ -18,7 +19,6 @@ mod app {
 
         task1::spawn().ok();
 
-        // Setup the monotonic timer
         (Shared {}, Local {}, init::Monotonics())
     }
 
@@ -31,8 +31,9 @@ mod app {
         }
     }
 
+    // TODO: Add tasks
     #[task]
     fn task1(_cx: task1::Context) {
-        defmt::info!("Hello from our minimal format!");
+        defmt::info!("Hello, but from nRF52 🎉!");
     }
 }

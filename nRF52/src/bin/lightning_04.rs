@@ -1,3 +1,4 @@
+//! The nRF52 is blinking the led of the Nucleo!
 #![no_main]
 #![no_std]
 

@@ -1,3 +1,4 @@
+//! The nRF52 is blinking the led of the Nucleo, with a proper instruction using cobs command.
 #![no_main]
 #![no_std]
 

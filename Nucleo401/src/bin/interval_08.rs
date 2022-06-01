@@ -1,3 +1,5 @@
+//! The nRF52 is blinking the light of the nucleo, with intervals. The light can be dimmed.
+
 #![no_main]
 #![no_std]
 
@@ -8,6 +10,7 @@ mod app {
     use defmt::Format;
     use heapless::Vec;
     use postcard::from_bytes_cobs;
+
     use serde::{Deserialize, Serialize};
     use stm32f4xx_hal::{
         gpio::gpioa::{PA10, PA9},
@@ -26,21 +29,26 @@ mod app {
     type Monotonic = MonoTimer<stm32f4xx_hal::pac::TIM5, 1_000_000>;
 
     #[derive(Serialize, Deserialize, Format, Clone, Copy)]
+
     pub enum Command {
         On,
         Off,
         Pwm(u16),
+        Interval(u8),
     }
     #[shared]
-    struct Shared {}
+    struct Shared {
+        #[lock_free]
+        brightness: u16,
+        #[lock_free]
+        time: u8,
+    }
 
     #[local]
     struct Local {
         usart: SandwichUart,
         buf: Vec<u8, 16>,
         // pwm has now the led, they are inseparable!
-        // aka: you cannont use the led as a peripheral now it is
-        // owned by the pwm
         pwm_channel: PwmChannel<TIM2, C1>,
     }
 
@@ -60,6 +68,8 @@ mod app {
         let mut pwm_channel = Timer::new(device.TIM2, &clocks).pwm(led, 20.khz());
         pwm_channel.enable();
 
+        let mut time = 1;
+        let brightness = pwm_channel.get_max_duty();
         let buf = Vec::new();
         let mut usart = Serial::new(
             device.USART1,
@@ -68,9 +78,10 @@ mod app {
             &clocks,
         )
         .unwrap();
+        blink::spawn();
         usart.listen(Event::Rxne);
         (
-            Shared {},
+            Shared { brightness, time },
             Local {
                 usart,
                 pwm_channel,
@@ -96,7 +107,7 @@ mod app {
     }
 
     // The lower priority software task handles the message
-    #[task(capacity = 16, priority = 1, local=[pwm_channel, buf])]
+    #[task(capacity = 16, priority = 1, shared=[brightness, time], local=[buf])]
     fn parse(cx: parse::Context, d: u8) {
         let _ = cx.local.buf.push(d);
 
@@ -106,36 +117,39 @@ mod app {
                 defmt::debug!("Received complete command: {:?}.", command);
                 match command {
                     Command::On => {
-                        cx.local
-                            .pwm_channel
-                            .set_duty(cx.local.pwm_channel.get_max_duty());
+                        *cx.shared.brightness = 255;
                     }
                     Command::Off => {
-                        cx.local.pwm_channel.set_duty(0);
+                        *cx.shared.brightness = 0;
                     }
-                    Command::Pwm(level) => {
-                        // 24 : this magic number corresponds to the max duty,
-                        // nothing to worry about here.
-                        // And division by zero is bad for health.
-                        // the sent value is always max == 255
-                        let max = cx.local.pwm_channel.get_max_duty();
-                        if level > 10 && level < 250 {
-                            defmt::info!(
-                                "Duty = {:?}/{:?}",
-                                cx.local.pwm_channel.get_max_duty(),
-                                level * 8
-                            );
-                            cx.local.pwm_channel.set_duty(max / level)
-                        } else if level >= 250 {
-                            cx.local.pwm_channel.set_duty(0);
-                        } else if level < 10 {
-                            cx.local.pwm_channel.set_duty(max);
-                        }
-                    }
+                    Command::Pwm(level) => match level {
+                        0..=10 => *cx.shared.brightness = 5,
+                        11..=30 => *cx.shared.brightness = 20,
+                        31..=80 => *cx.shared.brightness = 70,
+                        81..=130 => *cx.shared.brightness = 110,
+                        131..=170 => *cx.shared.brightness = 150,
+                        171..=200 => *cx.shared.brightness = 180,
+                        201..=230 => *cx.shared.brightness = 240,
+                        231..=u16::MAX => *cx.shared.brightness = 255,
+                    },
+                    Command::Interval(sec) => *cx.shared.time = sec,
                 }
             }
             //Clear också om from_bytes failar
             cx.local.buf.clear();
         };
+    }
+
+    #[task(shared=[brightness, time], local=[pwm_channel, powered: bool = false])]
+    fn blink(cx: blink::Context) {
+        let level = cx.shared.brightness;
+        if *cx.local.powered {
+            cx.local.pwm_channel.set_duty((*level * 8) as u16);
+            *cx.local.powered = false;
+        } else {
+            cx.local.pwm_channel.set_duty(0);
+            *cx.local.powered = true;
+        }
+        blink::spawn_after((*cx.shared.time as u32).secs()).ok();
     }
 }

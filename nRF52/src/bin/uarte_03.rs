@@ -1,3 +1,4 @@
+//! In this mini-project, you will send beer back and forth 🍻.
 #![no_main]
 #![no_std]
 

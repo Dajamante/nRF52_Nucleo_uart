@@ -3,6 +3,7 @@
 
 use nucleis as _; // global logger + panicking-behavior + memory layout
 
+//! This is the second mini-project. It is independant from it's nRF52 counterpart.
 #[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART1])]
 mod app {
 
@@ -23,7 +24,7 @@ mod app {
     struct Shared {}
     #[local]
     struct Local {
-        // Not Pin! : stm32f4xx-hal has no degrade () for the pins as nrf.
+        // We do not use the Pin type, but PA5! : stm32f4xx-hal has no degrade () for the pins as nrf.
         led: PA5<Output<PushPull>>,
     }
 

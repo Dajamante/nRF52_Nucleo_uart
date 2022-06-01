@@ -1,3 +1,5 @@
+//! The nRF52 is blinking the light of the nucleo, with intervals. The light can be dimmed.
+
 #![no_main]
 #![no_std]
 
