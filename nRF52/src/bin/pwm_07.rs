@@ -22,8 +22,13 @@ mod app {
 
     #[monotonic(binds = TIMER2, default = true)]
     type RticMono = MonoTimer<TIMER2>;
+
+    // This is the Command that will be sent instead of 0 or 1
+    // It has been augmented with a Pwm() with an inner level
+    // u8 is the most logical container, as we send magic numbers to ajust the power of the dimmer,
+    // and it is easier with a pwm value between 0-255
+    // But on the other side we sill use a u16 because .get_max_duty() of pwm returns a u16.
     #[derive(Serialize, Deserialize, Format, Clone, Copy)]
-    // u8 is the most logical value, sends a pwm value between 0-255
     pub enum Command {
         On,
         Off,
@@ -116,6 +121,9 @@ mod app {
         loop {}
     }
 
+    /// This task dispatch from port and channels.
+    /// If port is triggered we turn the light on or off -> call to task blink_led
+    /// If the channel0 or channel1 are triggered we use the dimmer! -> call to task change_pwm
     #[task(binds=GPIOTE, local=[gpiote])]
     fn on_gpiote(cx: on_gpiote::Context) {
         let gpiote = cx.local.gpiote;
@@ -137,6 +145,8 @@ mod app {
         }
     }
 
+    /// This task controls the dimmer. We use saturating adds and subs to keep values
+    /// between 0 and 255. We increment by 32 to have 8 levels of brightness.
     #[task(local=[ pwm, bright_on, bright_off])]
     fn change_pwm(cx: change_pwm::Context) {
         if cx.local.bright_on.is_low().unwrap() && *cx.local.pwm < 255 {
@@ -160,7 +170,6 @@ mod app {
 
         for b in data.iter() {
             let _ = cx.local.tx.write(*b);
-            //defmt::info!("Byte sent : {:?}", *b);
         }
         let _ = cx.local.tx.flush();
     }

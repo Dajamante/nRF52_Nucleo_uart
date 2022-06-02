@@ -21,6 +21,8 @@ mod app {
 
     #[monotonic(binds = TIMER2, default = true)]
     type RticMono = MonoTimer<TIMER2>;
+
+    // This is the Command that will be sent instead of 0 or 1
     #[derive(Serialize, Deserialize, Format, Clone, Copy)]
     pub enum Command {
         On,
@@ -98,6 +100,10 @@ mod app {
         loop {}
     }
 
+    /// This tasks only checks if an interrupt has been activated,
+    /// resets the interrupt and blinks the led after 30 millis for debouncing.
+    /// A task that controls an interrupt should only do that, and send the logic to
+    /// another task.
     #[task(binds=GPIOTE, local=[gpiote])]
     fn on_gpiote(cx: on_gpiote::Context) {
         let gpiote = cx.local.gpiote;
@@ -107,6 +113,8 @@ mod app {
         }
     }
 
+    /// This task is going to blink the led as in program button_05 but this time,
+    /// we are using a COBS command. We are using a variant Command::On or Command::Off
     #[task(local=[btn_on, btn_off])]
     fn blink_led(cx: blink_led::Context) {
         if cx.local.btn_on.is_low().unwrap() {
@@ -114,8 +122,9 @@ mod app {
         } else if cx.local.btn_off.is_low().unwrap() {
             send_command::spawn(Command::Off).ok();
         }
-        // flush or tx.write(&[1])!
     }
+
+    /// This task will send the Command byte by byte.
     #[task(local=[tx])]
     fn send_command(cx: send_command::Context, cmd: Command) {
         let mut buf = [0u8; 8];
@@ -123,7 +132,6 @@ mod app {
         defmt::info!("Data : {:?}", data);
 
         for b in data.iter() {
-            //defmt::info!("I sent this byte : {:?}", *b);
             let _ = cx.local.tx.write(*b);
         }
         let _ = cx.local.tx.flush();

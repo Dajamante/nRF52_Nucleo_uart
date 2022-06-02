@@ -131,6 +131,8 @@ mod app {
 
         gpiote.reset_events();
     }
+
+    /// This task is adding an interval between the blinking.
     #[task(local=[btn_up, btn_down, sec])]
     fn blink_led(cx: blink_led::Context) {
         if cx.local.btn_up.is_low().unwrap() {
@@ -167,7 +169,6 @@ mod app {
 
         for b in data.iter() {
             let _ = cx.local.tx.write(*b);
-            //defmt::info!("Byte sent : {:?}", *b);
         }
         let _ = cx.local.tx.flush();
     }

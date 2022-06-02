@@ -63,6 +63,7 @@ mod app {
         }
     }
 
+    /// This task receives 0 or ones, and turns on or off the light accordingly!
     #[task(binds=USART1, local=[usart, led])]
     fn interupting(cx: interupting::Context) {
         if let Ok(d) = cx.local.usart.read() {
@@ -71,12 +72,12 @@ mod app {
                     defmt::debug!("Received {:?}, turning on the light!", d);
                     cx.local.led.set_high();
                     // echo back the byte
-                    cx.local.usart.write(d);
+                    let _ = cx.local.usart.write(d);
                 }
                 0 => {
                     defmt::debug!("Received {:?}, turning on the light!", d);
                     cx.local.led.set_low();
-                    cx.local.usart.write(d);
+                    let _ = cx.local.usart.write(d);
                 }
                 _ => defmt::debug!("Received noise, d = {:?}.", d),
             }

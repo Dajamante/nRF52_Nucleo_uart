@@ -70,11 +70,11 @@ mod app {
         if let Ok(d) = cx.local.usart.read() {
             match d {
                 1 => {
-                    defmt::debug!("Received {:?}, turning on the light!", d);
+                    defmt::debug!("Received {:?} 🟢 , turning on the light!", d);
                     cx.local.led.set_high();
                 }
                 0 => {
-                    defmt::debug!("Received {:?}, turning off the light!", d);
+                    defmt::debug!("Received {:?} 🔴 , turning off the light!", d);
                     cx.local.led.set_low();
                 }
                 _ => {

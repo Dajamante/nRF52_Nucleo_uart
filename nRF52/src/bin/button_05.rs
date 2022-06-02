@@ -92,6 +92,10 @@ mod app {
         loop {}
     }
 
+    /// This tasks only checks if an interrupt has been activated,
+    /// resets the interrupt and blinks the led after 30 millis for debouncing.
+    /// A task that controls an interrupt should only do that, and send the logic to
+    /// another task.
     #[task(binds=GPIOTE, local=[gpiote])]
     fn on_gpiote(cx: on_gpiote::Context) {
         let gpiote = cx.local.gpiote;
@@ -104,13 +108,13 @@ mod app {
     #[task(local=[tx, btn_on, btn_off])]
     fn blink_led(cx: blink_led::Context) {
         if cx.local.btn_on.is_low().unwrap() {
-            defmt::info!("button on is pushed");
+            defmt::info!("Button on is pushed 🟢.");
             let _ = hal_write::write(cx.local.tx, 1);
         } else if cx.local.btn_off.is_low().unwrap() {
-            defmt::info!("button off is pushed");
+            defmt::info!("Button off is pushed 🔴.");
             let _ = hal_write::write(cx.local.tx, 0);
         }
-        // flush or tx.write(&[1])!
+        // Flush or use tx.write(&[1])!
         let _ = cx.local.tx.flush();
     }
 }
