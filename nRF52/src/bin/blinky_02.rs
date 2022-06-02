@@ -14,9 +14,12 @@ mod app {
     };
 
     use nrfie::mono::{ExtU32, MonoTimer};
-    // DwtSystic is an emergency solution if
-    // you just want something that works everywhere
-    // but it has more overhead and poorer accuracy
+
+    // Monotonic is a timer that never stops with a fixed tick rate.
+    // Its type is "read only". RTIC is agnostic and has a trait called
+    // Monotonic that the program needs to implement.
+    // We need to use a timer that implements this trait,
+    // that we will use for everything time-related
     #[monotonic(binds = TIMER2, default = true)]
     type RticMono = MonoTimer<TIMER2>;
 
@@ -25,6 +28,8 @@ mod app {
 
     #[local]
     struct Local {
+        // We DO use a Pin type, because we can degrade them later.
+        // Contarily to the STM32F that needs to use the specific pins.
         led1: Pin<Output<PushPull>>,
         led2: Pin<Output<PushPull>>,
     }
@@ -36,6 +41,9 @@ mod app {
         let timer = device.TIMER2;
         let mono = RticMono::new(timer);
         let p0 = Parts::new(device.P0);
+        // Here we use degrade, the equivalent in stm32f4xx is erase.
+        // It's generally called "type erasure" as in - you are erasing part of the type information, and storing it as data at runtime
+        // https://github.com/stm32-rs/stm32f4xx-hal/blob/cb7cd4e4ad63a0b72e6711b720b1d29ff2db3063/src/gpio.rs#L326-L342
         let led1 = p0.p0_13.into_push_pull_output(Level::High).degrade();
         let led2 = p0.p0_14.into_push_pull_output(Level::High).degrade();
         blink::spawn().ok();
@@ -55,9 +63,10 @@ mod app {
 
     #[task(local=[led1, led2])]
     fn blink(cx: blink::Context) {
-        // Wrapped in a Result, but this is just reading to a register
+        // is_set_high() is wrapped in a Result, but this is just reading to a register.
         if cx.local.led1.is_set_high().unwrap() {
-            // can this go wrong? No! We just set a register :)
+            // As you see, a result is ignored.
+            // Can this go wrong? No! We just set a register :)
             let _ = cx.local.led1.set_low();
             let _ = cx.local.led2.set_high();
         } else {
