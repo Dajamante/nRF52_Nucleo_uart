@@ -141,7 +141,12 @@ A great crate to do that is [postcard-rs](https://docs.rs/postcard/latest/postca
 
 All programs in this project are done with [the Knurling App template](https://github.com/knurling-rs/app-template). If you want to do your own, follow the steps in the documentation!
 
+I do use default logging level debug. You can change that level in the respective `.cargo/config` files.
 
+```toml
+[env]
+DEFMT_LOG="debug"
+```
 
 ## License
 

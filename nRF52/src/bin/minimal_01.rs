@@ -31,7 +31,6 @@ mod app {
         }
     }
 
-    // TODO: Add tasks
     #[task]
     fn task1(_cx: task1::Context) {
         defmt::info!("Hello, but from nRF52 🎉!");

@@ -1,4 +1,4 @@
-//! In this mini-project, you will send beer back and forth 🍻.
+//! In this mini-project, you will send beer back and forth 4 bytes that are converted to a beer emoji🍻.
 #![no_main]
 #![no_std]
 
@@ -74,15 +74,15 @@ mod app {
         )
     }
 
+    /// This function receives 4 u8.
+    /// It needs to be done in an idle task because the idle task is always on.
+    /// It will then convert the 4 u8 into a beer emoji with core::str::from_utf8() by passing the buffert.
     #[idle(local=[rx, counter, buf])]
     fn idle(cx: idle::Context) -> ! {
         loop {
             if let Ok(byte) = cx.local.rx.read() {
-                //let counter = *cx.local.counter;
-                //let mut buf = *cx.local.buf;
                 cx.local.buf[*cx.local.counter] = byte;
                 *cx.local.counter += 1;
-                //defmt::info!("We received back an: {}", cx.local.buf);
                 if *cx.local.counter == 4 {
                     if let Ok(beer) = core::str::from_utf8(&cx.local.buf[..]) {
                         defmt::info!("nRF52 says: look at this {} we got back!", beer);
@@ -94,6 +94,8 @@ mod app {
         }
     }
 
+    /// This function will fill a buffer with 4 chars.
+    /// It will resend it every second.    
     #[task(local=[tx])]
     fn sending_buffer(cx: sending_buffer::Context) {
         let mut buf = [0u8; 4];

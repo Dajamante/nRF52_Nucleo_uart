@@ -27,6 +27,10 @@ mod app {
     #[monotonic(binds = TIM5, default = true)]
     type Monotonic = MonoTimer<stm32f4xx_hal::pac::TIM5, 1_000_000>;
 
+    // This is the Command that will be received instead of 0 or 1
+    // It has been augmented with a Pwm() with an inner level
+    // We use u16 because .get_max_duty() of pwm returns a u16.
+    // But on the other side we sill use a u8 as it makes more sense for our function :)
     #[derive(Serialize, Deserialize, Format, Clone, Copy)]
     pub enum Command {
         On,
@@ -89,7 +93,8 @@ mod app {
         }
     }
 
-    // A hardware task must do only the dispatching
+    /// This task is a hardware task that does only dispatching
+    /// And has highest priority.
     #[task(binds=USART1, priority = 2, local=[usart])]
     fn command_rx(cx: command_rx::Context) {
         while let Ok(d) = cx.local.usart.read() {
@@ -97,7 +102,9 @@ mod app {
         }
     }
 
-    // The lower priority software task handles the message
+    /// This lower priority software task handles the message.
+    /// With a terrible function to dim the light.
+    /// Terrible but enough for proof of concept.
     #[task(capacity = 16, priority = 1, local=[pwm_channel, buf])]
     fn parse(cx: parse::Context, d: u8) {
         let _ = cx.local.buf.push(d);

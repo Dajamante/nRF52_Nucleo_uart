@@ -26,6 +26,7 @@ mod app {
     #[monotonic(binds = TIM2, default = true)]
     type Monotonic = MonoTimer<stm32f4xx_hal::pac::TIM2, 1_000_000>;
 
+    // This is the Command that will be received instead of 0 or 1
     #[derive(Serialize, Deserialize, Format, Clone, Copy)]
     pub enum Command {
         On,
@@ -73,6 +74,10 @@ mod app {
         }
     }
 
+    /// This tasks received the bytes and sends them to processing.
+    /// It has higher priority than the processing!
+    /// The hardware task must preempt.
+    /// https://rtic.rs/0.5/book/en/by-example/app.html#priorities
     #[task(binds=USART1, priority = 2, local=[usart])]
     fn command_rx(cx: command_rx::Context) {
         if let Ok(d) = cx.local.usart.read() {
@@ -80,6 +85,9 @@ mod app {
         }
     }
 
+    /// This tasks deserializes a message from a buffer.
+    /// When 0, that indicates message termination is received,
+    /// we will convert the buffer to a command and act on the light.
     #[task(capacity = 16, priority = 1, local=[led, buf])]
     fn parse(cx: parse::Context, d: u8) {
         defmt::debug!("cx.local.buf: {:?}.", cx.local.buf.as_slice());

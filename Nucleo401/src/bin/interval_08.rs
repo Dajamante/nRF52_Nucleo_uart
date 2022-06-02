@@ -140,6 +140,9 @@ mod app {
         };
     }
 
+    /// This task is setting the light on or off with an interval.
+    /// It reads the brightness (a shared resource) and spawn itself after a delay
+    /// that you decide with the nRF52 buttons!
     #[task(shared=[brightness, time], local=[pwm_channel, powered: bool = false])]
     fn blink(cx: blink::Context) {
         let level = cx.shared.brightness;

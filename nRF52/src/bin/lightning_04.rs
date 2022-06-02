@@ -31,7 +31,7 @@ mod app {
         led: Pin<Output<PushPull>>,
     }
 
-    // Buffers are static when initiated there
+    // Buffers are static when initiated here!
     #[init(local=[
         uart_rx_buff: [u8;1] = [0;1],
         uart_tx_buff: [u8;4] = [0;4]
@@ -79,6 +79,8 @@ mod app {
         }
     }
 
+    /// This function toggles the blink variable every second.
+    /// It also sends the corresponding instruction to the Nucleo!
     #[task(local=[rx, tx, blink, led])]
     fn sending_blink(cx: sending_blink::Context) {
         if *cx.local.blink == 1 {
