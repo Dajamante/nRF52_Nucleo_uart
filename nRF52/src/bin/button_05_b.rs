@@ -37,6 +37,7 @@ mod app {
     #[derive(Serialize, Format, Deserialize, Clone, Copy)]
     pub enum Command {
         On,
+        Off,
     }
     // Buffers are static when initiated there
     #[init(local=[
@@ -83,14 +84,9 @@ mod app {
                 let _ = cx.local.buf.push(d);
                 if d == 0 {
                     if let Ok(command) = from_bytes_cobs(cx.local.buf) {
-                        match command {
-                            Command::On => {
-                                defmt::debug!("Received {:?} 🟢 , turning on the light!", command);
-                                cx.local.buf.clear();
-                                light_on::spawn_after(25.millis()).ok();
-                            }
-                            _ => defmt::debug!("Received nothing"),
-                        }
+                        defmt::debug!("Received {:?} 🟢 ", command);
+                        cx.local.buf.clear();
+                        toggle::spawn_after(25.millis(), command).ok();
                     }
                 }
             }
@@ -98,15 +94,16 @@ mod app {
     }
 
     #[task(shared=[led])]
-    fn light_on(mut cx: light_on::Context) {
-        let _ = cx.shared.led.lock(|l| l.set_high());
-        defmt::debug!("Light on");
-        light_off::spawn_after(2.secs()).ok();
-    }
-
-    #[task(shared=[led])]
-    fn light_off(mut cx: light_off::Context) {
-        defmt::debug!("Light off");
-        let _ = cx.shared.led.lock(|l| l.set_low());
+    fn toggle(mut cx: toggle::Context, command: Command) {
+        match command {
+            Command::On => {
+                let _ = cx.shared.led.lock(|l| l.set_high());
+                defmt::debug!("Light on");
+            }
+            Command::Off => {
+                let _ = cx.shared.led.lock(|l| l.set_low());
+                defmt::debug!("Light off");
+            }
+        }
     }
 }

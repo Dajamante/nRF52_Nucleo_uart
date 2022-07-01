@@ -43,6 +43,7 @@ mod app {
     #[derive(Serialize)]
     pub enum Command {
         On,
+        Off,
     }
 
     #[init]
@@ -92,20 +93,35 @@ mod app {
     fn button_click(ctx: button_click::Context) {
         defmt::debug!("Button pushed");
         ctx.local.button.clear_interrupt_pending_bit();
-        send::spawn_after(25.millis()).ok();
+        send::spawn_after(40.millis()).ok();
     }
 
-    #[task(priority=1, local=[usart, led])]
+    #[task(priority=1, local=[usart, led, is_on : bool = false])]
     fn send(cx: send::Context) {
         let mut buf = [0u8; 8];
-        let cmd = Command::On;
-        let data = to_slice_cobs(&cmd, &mut buf).unwrap();
-        defmt::info!("Data : {:?}", data);
 
-        for b in data.iter() {
-            defmt::info!("b : {:?}", *b);
-            let _ = cx.local.usart.write(*b);
+        if *cx.local.is_on {
+            let cmd = Command::On;
+            let data = to_slice_cobs(&cmd, &mut buf).unwrap();
+            defmt::info!("Data : {:?}", data);
+
+            for b in data.iter() {
+                defmt::info!("b : {:?}", *b);
+                let _ = cx.local.usart.write(*b);
+            }
+            *cx.local.is_on = false;
+        } else {
+            let cmd = Command::Off;
+            let data = to_slice_cobs(&cmd, &mut buf).unwrap();
+            defmt::info!("Data : {:?}", data);
+
+            for b in data.iter() {
+                defmt::info!("b : {:?}", *b);
+                let _ = cx.local.usart.write(*b);
+            }
+            *cx.local.is_on = true;
         }
+
         let _ = cx.local.usart.flush();
     }
 }
