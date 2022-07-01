@@ -6,7 +6,6 @@ use nucleis as _; // global logger + panicking-behavior + memory layout
 
 #[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART2])]
 mod app {
-    use heapless::Vec;
     use postcard::to_slice_cobs;
     use serde::Serialize;
     use stm32f4xx_hal::{
@@ -35,14 +34,14 @@ mod app {
     #[local]
     struct Local {
         button: PC13<Input<PullUp>>,
-        led: PA5<Output<PushPull>>,
         usart: SandwichUart,
     }
 
     // The Nucleo has only one button!
-    #[derive(Serialize)]
+    #[derive(Serialize, defmt::Format)]
     pub enum Command {
         On,
+        Off,
     }
 
     #[init]
@@ -58,7 +57,6 @@ mod app {
         let gpioa = device.GPIOA.split();
         let usart_rx = gpioa.pa10.into_alternate();
         let usart_tx = gpioa.pa9.into_alternate();
-        let led = gpioa.pa5.into_push_pull_output();
         let gpioc = device.GPIOC.split();
         let mut button = gpioc.pc13.into_pull_up_input();
 
@@ -74,11 +72,7 @@ mod app {
         )
         .unwrap();
         usart.listen(Event::Rxne);
-        (
-            Shared {},
-            Local { usart, led, button },
-            init::Monotonics(mono),
-        )
+        (Shared {}, Local { usart, button }, init::Monotonics(mono))
     }
 
     #[idle]
@@ -92,18 +86,24 @@ mod app {
     fn button_click(ctx: button_click::Context) {
         defmt::debug!("Button pushed");
         ctx.local.button.clear_interrupt_pending_bit();
-        send::spawn_after(25.millis()).ok();
+        send::spawn_after(30.millis()).ok();
     }
 
-    #[task(priority=1, local=[usart, led])]
+    #[task(priority=1, local=[usart, is_on: bool = false])]
     fn send(cx: send::Context) {
         let mut buf = [0u8; 8];
-        let cmd = Command::On;
+        let mut cmd = Command::On;
+        if *cx.local.is_on {
+            cmd = Command::Off;
+            *cx.local.is_on = false;
+        } else {
+            *cx.local.is_on = true;
+        }
+        defmt::info!("Command : {:?}", cmd);
         let data = to_slice_cobs(&cmd, &mut buf).unwrap();
         defmt::info!("Data : {:?}", data);
 
         for b in data.iter() {
-            defmt::info!("b : {:?}", *b);
             let _ = cx.local.usart.write(*b);
         }
         let _ = cx.local.usart.flush();
