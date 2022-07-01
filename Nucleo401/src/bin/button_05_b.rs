@@ -6,6 +6,8 @@ use nucleis as _; // global logger + panicking-behavior + memory layout
 
 #[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART2])]
 mod app {
+    use postcard::to_slice_cobs;
+    use serde::Serialize;
     use stm32f4xx_hal::{
         gpio::{
             gpioa::{PA10, PA5, PA9},
@@ -33,8 +35,15 @@ mod app {
 
     #[local]
     struct Local {
-        led: PA5<Output<PushPull>>,
+        button: PC13<Input<PullUp>>,
         usart: SandwichUart,
+    }
+
+    // The Nucleo has only one button!
+    #[derive(Serialize, defmt::Format)]
+    pub enum Command {
+        On,
+        Off,
     }
 
     #[init]
@@ -50,7 +59,6 @@ mod app {
         let gpioa = device.GPIOA.split();
         let usart_rx = gpioa.pa10.into_alternate();
         let usart_tx = gpioa.pa9.into_alternate();
-        let led = gpioa.pa5.into_push_pull_output();
         let gpioc = device.GPIOC.split();
         let mut button = gpioc.pc13.into_pull_up_input();
 
@@ -83,21 +91,26 @@ mod app {
     #[task(binds = EXTI15_10, priority=2, shared = [button])]
     fn button_click(mut ctx: button_click::Context) {
         defmt::debug!("Button pushed");
-        ctx.shared.button.lock(|b| b.clear_interrupt_pending_bit());
-        send::spawn_after(25.millis()).ok();
+        ctx.local.button.clear_interrupt_pending_bit();
+        send::spawn_after(30.millis()).ok();
     }
 
-    #[task(priority=1, local=[usart, led, is_on : bool = false], shared=[button])]
-    fn send(mut cx: send::Context) {
-        let mut b = 0;
-        if cx.shared.button.lock(|b| b.is_low()) {
-            if *cx.local.is_on {
-                b = 0;
-                *cx.local.is_on = false;
-            } else {
-                b = 1;
-                *cx.local.is_on = true;
-            }
+    #[task(priority=1, local=[usart, is_on: bool = false])]
+    fn send(cx: send::Context) {
+        let mut buf = [0u8; 8];
+        let mut cmd = Command::On;
+        if *cx.local.is_on {
+            cmd = Command::Off;
+            *cx.local.is_on = false;
+        } else {
+            *cx.local.is_on = true;
+        }
+        defmt::info!("Command : {:?}", cmd);
+        let data = to_slice_cobs(&cmd, &mut buf).unwrap();
+        defmt::info!("Data : {:?}", data);
+
+        for b in data.iter() {
+            let _ = cx.local.usart.write(*b);
         }
         let _ = cx.local.usart.write(b);
         let _ = cx.local.usart.flush();
