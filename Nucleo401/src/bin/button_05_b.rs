@@ -6,7 +6,6 @@ use nucleis as _; // global logger + panicking-behavior + memory layout
 
 #[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART2])]
 mod app {
-    use heapless::Vec;
     use postcard::to_slice_cobs;
     use serde::Serialize;
     use stm32f4xx_hal::{
@@ -93,7 +92,7 @@ mod app {
     fn button_click(ctx: button_click::Context) {
         defmt::debug!("Button pushed");
         ctx.local.button.clear_interrupt_pending_bit();
-        send::spawn_after(40.millis()).ok();
+        send::spawn().ok();
     }
 
     #[task(priority=1, local=[usart, led, is_on : bool = false])]
