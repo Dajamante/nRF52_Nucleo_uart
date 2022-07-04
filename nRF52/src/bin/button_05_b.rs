@@ -82,12 +82,14 @@ mod app {
         loop {
             if let Ok(d) = cx.local.rx.read() {
                 let _ = cx.local.buf.push(d);
+                defmt::info!("Received buffert {:?}", cx.local.buf.as_slice());
                 if d == 0 {
                     if let Ok(command) = from_bytes_cobs(cx.local.buf) {
                         defmt::debug!("Received {:?} 🟢 ", command);
-                        cx.local.buf.clear();
-                        toggle::spawn_after(25.millis(), command).ok();
+
+                        toggle::spawn(command).ok();
                     }
+                    cx.local.buf.clear();
                 }
             }
         }
@@ -95,14 +97,15 @@ mod app {
 
     #[task(shared=[led])]
     fn toggle(mut cx: toggle::Context, command: Command) {
+        defmt::info!("Command receved in toggle {}", command);
         match command {
             Command::On => {
-                let _ = cx.shared.led.lock(|l| l.set_high());
-                defmt::debug!("Light on");
+                let _ = cx.shared.led.lock(|l| l.set_low());
+                defmt::debug!("Led sets low");
             }
             Command::Off => {
-                let _ = cx.shared.led.lock(|l| l.set_low());
-                defmt::debug!("Light off");
+                let _ = cx.shared.led.lock(|l| l.set_high());
+                defmt::debug!("Led sets high");
             }
         }
     }
