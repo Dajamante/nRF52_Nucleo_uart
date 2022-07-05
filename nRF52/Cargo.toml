@@ -13,7 +13,7 @@ fugit = "0.3.5"
 nrf52840-hal = "0.14.1"
 postcard = "0.7.2"
 rtic-monotonic = "1"
-
+heapless =  "0.7.10"
 [dependencies.panic-probe]
 features = ["print-defmt"]
 version = "0.3.0"
