@@ -61,17 +61,19 @@ Most programs have the same name but I kept "uarte" and "usart" as this is how t
 
 |     | Interracting? | nRF52/Nucleo code   | What does it do?                                                                                                                                                                                |
 | --- | ---------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1   | No         | `minimal.rs`        | It says hi👋                                                                                                                                                                                    |
-| 2   | No         | `blinky.rs`         | .. blinks a led💡                                                                                                                                                                               |
-| 3   | yes        | `uarte.rs/usart.rs` | Sending byte beer emoji back and forth: <br /> `nRF52 says: look at this 🍻 we got back!`                                                                                                       |
-| 4   | yes        | `lightning.rs`      | nRF52 is blinking the led of the nucleo 💡                                                                                                                                                      |
-| 5   | yes        | `button.rs`         | nRF52 is blinking the led of the nucleo 💡, but with a button                                                                                                                                   |
-| 6   | yes        | `postcard.rs`       | nRF52 is blinking the led of the nucleo 💡, with a proper instruction using [cobs](https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing) command. |
-| 7   | yes        | `pws.rs`            | nRF52 is dimming(*) the light of the nucleo 🔅💡🔅                                                                                                                                              |
-| 8   | yes        | `interval.rs`       | nRF52 is blinking the light of the nucleo, with intervals. The light can be dimmed 🔅💡🔅.                                                                                                      |
+| 1   | No         | `minimal_01.rs`        | It says hi👋                                                                                                                                                                                    |
+| 2   | No         | `blinky_02.rs`         | .. blinks a led💡                                                                                                                                                                               |
+| 3   | yes        | `uarte_03.rs/usart_03.rs` | Sending byte beer emoji back and forth: <br /> `nRF52 says: look at this 🍻 we got back!`                                                                                                       |
+| 4   | yes        | `lightning_04.rs`      | nRF52 is blinking the led of the nucleo 💡                                                                                                                                                      |
+| 5   | yes        | `button_05.rs`         | nRF52 is blinking the led of the nucleo 💡, but with a button                                                                                                                                   |
+| 5_bis   | yes        | `button_05_b.rs`         | The Nucleo is toggling the led of the nRF **💡 |
+| 6   | yes        | `postcard_06.rs`       | nRF52 is blinking the led of the nucleo 💡, with a proper instruction using [cobs](https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing) command. |
+| 7   | yes        | `pws_07.rs`            | nRF52 is dimming(*) the light of the nucleo 🔅💡🔅                                                                                                                                              |
+| 8   | yes        | `interval_08.rs`       | nRF52 is blinking the light of the nucleo, with intervals. The light can be dimmed 🔅💡🔅.                                                                                                      |
 
 *ATM the dimmer function is very bad, and need to be fixed (the incrementation must be based on a function, not magic numbers).
 
+** Special request from Twitter ⭐!
 ## RTIC
 
 All projects are written with [RTIC](https://rtic.rs/1/book/en/), a concurrency framework for Cortex-M devices.
