@@ -24,12 +24,11 @@ mod app {
     type RticMono = MonoTimer<TIMER2>;
 
     #[shared]
-    struct Shared {
-        led: Pin<Output<PushPull>>,
-    }
+    struct Shared {}
 
     #[local]
     struct Local {
+        led: Pin<Output<PushPull>>,
         rx: UarteRx<UARTE1>,
         buf: Vec<u8, 3>,
     }
@@ -74,38 +73,28 @@ mod app {
             .split(cx.local.uart_tx_buff, cx.local.uart_rx_buff)
             .unwrap();
 
-        (Shared { led }, Local { buf, rx }, init::Monotonics(mono))
+        (Shared {}, Local { buf, led, rx }, init::Monotonics(mono))
     }
 
-    #[idle(local=[rx, buf])]
+    #[idle(local=[rx, led, buf])]
     fn idle(cx: idle::Context) -> ! {
         loop {
-            if let Ok(d) = cx.local.rx.read() {
-                let _ = cx.local.buf.push(d);
-                defmt::info!("Received buffert {:?}", cx.local.buf.as_slice());
-                if d == 0 {
-                    if let Ok(command) = from_bytes_cobs(cx.local.buf) {
-                        defmt::debug!("Received {:?} 🟢 ", command);
+            while let Ok(d) = cx.local.rx.read() {
+                defmt::info!("Received byte {:?}", d);
 
-                        toggle::spawn(command).ok();
+                match d {
+                    1 => {
+                        defmt::info!("Received 1, setting low.");
+                        cx.local.led.set_low();
                     }
-                    cx.local.buf.clear();
+                    0 => {
+                        defmt::info!("Received 0, setting high.");
+                        cx.local.led.set_high();
+                    }
+                    _ => {
+                        defmt::info!("Noise.");
+                    }
                 }
-            }
-        }
-    }
-
-    #[task(shared=[led])]
-    fn toggle(mut cx: toggle::Context, command: Command) {
-        defmt::info!("Command receved in toggle {}", command);
-        match command {
-            Command::On => {
-                let _ = cx.shared.led.lock(|l| l.set_low());
-                defmt::debug!("Led sets low");
-            }
-            Command::Off => {
-                let _ = cx.shared.led.lock(|l| l.set_high());
-                defmt::debug!("Led sets high");
             }
         }
     }
