@@ -6,8 +6,6 @@ use nucleis as _; // global logger + panicking-behavior + memory layout
 
 #[rtic::app(device = stm32f4xx_hal::pac, dispatchers = [USART2])]
 mod app {
-    use postcard::to_slice_cobs;
-    use serde::Serialize;
     use stm32f4xx_hal::{
         gpio::{
             gpioa::{PA10, PA5, PA9},
@@ -29,11 +27,12 @@ mod app {
     type Monotonic = MonoTimer<stm32f4xx_hal::pac::TIM2, 1_000_000>;
 
     #[shared]
-    struct Shared {}
+    struct Shared {
+        button: PC13<Input<PullUp>>,
+    }
 
     #[local]
     struct Local {
-        button: PC13<Input<PullUp>>,
         led: PA5<Output<PushPull>>,
         usart: SandwichUart,
     }
@@ -68,8 +67,8 @@ mod app {
         .unwrap();
         usart.listen(Event::Rxne);
         (
-            Shared {},
-            Local { usart, led, button },
+            Shared { button },
+            Local { usart, led },
             init::Monotonics(mono),
         )
     }
@@ -81,28 +80,26 @@ mod app {
         }
     }
 
-    #[task(binds = EXTI15_10, priority=2, local = [button])]
-    fn button_click(ctx: button_click::Context) {
+    #[task(binds = EXTI15_10, priority=2, shared = [button])]
+    fn button_click(mut ctx: button_click::Context) {
         defmt::debug!("Button pushed");
-        ctx.local.button.clear_interrupt_pending_bit();
+        ctx.shared.button.lock(|b| b.clear_interrupt_pending_bit());
         send::spawn_after(25.millis()).ok();
     }
 
-    #[task(priority=1, local=[usart, led, is_on : bool = false])]
-    fn send(cx: send::Context) {
+    #[task(priority=1, local=[usart, led, is_on : bool = false], shared=[button])]
+    fn send(mut cx: send::Context) {
         let mut b = 0;
-        //if cx.local.button.is_low() {
-        if *cx.local.is_on {
-            b = 0;
-            *cx.local.is_on = false;
-        } else {
-            b = 1;
-            *cx.local.is_on = true;
+        if cx.shared.button.lock(|b| b.is_low()) {
+            if *cx.local.is_on {
+                b = 0;
+                *cx.local.is_on = false;
+            } else {
+                b = 1;
+                *cx.local.is_on = true;
+            }
         }
-
-        //}
         let _ = cx.local.usart.write(b);
-
         let _ = cx.local.usart.flush();
     }
 }
