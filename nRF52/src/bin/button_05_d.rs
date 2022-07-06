@@ -16,7 +16,9 @@ mod app {
         pac::{TIMER2, UARTE1},
         uarte::{Baudrate, Parity, Pins as UartePins, Uarte},
     };
-    use nrfie::mono::MonoTimer;
+    use nrfie::mono::{ExtU32, MonoTimer};
+    use postcard::from_bytes_cobs;
+    use serde::{Deserialize, Serialize};
 
     #[monotonic(binds = TIMER2, default = true)]
     type RticMono = MonoTimer<TIMER2>;
@@ -27,10 +29,15 @@ mod app {
     #[local]
     struct Local {
         led: Pin<Output<PushPull>>,
-        rx: UarteRx<UARTE1>,
+        uarte: Uarte<UARTE1>,
         buf: Vec<u8, 3>,
     }
-
+    // This is the Command that will be sent instead of 0 or 1
+    #[derive(Serialize, Format, Deserialize, Clone, Copy)]
+    pub enum Command {
+        On,
+        Off,
+    }
     // Buffers are static when initiated there
     #[init(local=[
         uart_tx_buff: [u8; 4] = [0;4],
@@ -59,33 +66,28 @@ mod app {
             cts: None,
             rts: None,
         };
-        let led = p0.p0_13.into_push_pull_output(Level::High).degrade();
+        let mut led = p0.p0_13.into_push_pull_output(Level::High).degrade();
 
         let uarte = Uarte::new(device.UARTE1, pins, Parity::EXCLUDED, Baudrate::BAUD9600);
-        let (_tx, rx) = uarte
-            .split(cx.local.uart_tx_buff, cx.local.uart_rx_buff)
-            .unwrap();
 
-        (Shared {}, Local { buf, led, rx }, init::Monotonics(mono))
+        (Shared {}, Local { buf, led, uarte }, init::Monotonics(mono))
     }
 
-    #[idle(local=[rx, led, buf])]
+    #[idle(local=[uarte, led])]
     fn idle(cx: idle::Context) -> ! {
         loop {
-            while let Ok(d) = cx.local.rx.read() {
-                defmt::info!("Received byte {:?}", d);
-
-                match d {
-                    1 => {
-                        defmt::info!("Received 1, setting low.");
-                        let _ = cx.local.led.set_low();
-                    }
-                    0 => {
-                        defmt::info!("Received 0, setting high.");
-                        let _ = cx.local.led.set_high();
-                    }
-                    _ => {
-                        defmt::info!("Noise.");
+            let mut buf = [0_u8; 3];
+            if cx.local.uarte.read(&mut buf).is_ok() {
+                if let Ok(command) = from_bytes_cobs(&mut buf) {
+                    match command {
+                        Command::On => {
+                            let _ = cx.local.led.set_high();
+                            defmt::debug!("We're high.");
+                        }
+                        Command::Off => {
+                            let _ = cx.local.led.set_low();
+                            defmt::debug!("We're low.");
+                        }
                     }
                 }
             }
