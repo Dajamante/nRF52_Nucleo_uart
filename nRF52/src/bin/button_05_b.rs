@@ -16,9 +16,7 @@ mod app {
         pac::{TIMER2, UARTE1},
         uarte::{Baudrate, Parity, Pins as UartePins, Uarte},
     };
-    use nrfie::mono::{ExtU32, MonoTimer};
-    use postcard::from_bytes_cobs;
-    use serde::{Deserialize, Serialize};
+    use nrfie::mono::MonoTimer;
 
     #[monotonic(binds = TIMER2, default = true)]
     type RticMono = MonoTimer<TIMER2>;
@@ -32,12 +30,7 @@ mod app {
         rx: UarteRx<UARTE1>,
         buf: Vec<u8, 3>,
     }
-    // This is the Command that will be sent instead of 0 or 1
-    #[derive(Serialize, Format, Deserialize, Clone, Copy)]
-    pub enum Command {
-        On,
-        Off,
-    }
+
     // Buffers are static when initiated there
     #[init(local=[
         uart_tx_buff: [u8; 4] = [0;4],
@@ -66,7 +59,7 @@ mod app {
             cts: None,
             rts: None,
         };
-        let mut led = p0.p0_13.into_push_pull_output(Level::High).degrade();
+        let led = p0.p0_13.into_push_pull_output(Level::High).degrade();
 
         let uarte = Uarte::new(device.UARTE1, pins, Parity::EXCLUDED, Baudrate::BAUD9600);
         let (_tx, rx) = uarte
@@ -85,11 +78,11 @@ mod app {
                 match d {
                     1 => {
                         defmt::info!("Received 1, setting low.");
-                        cx.local.led.set_low();
+                        let _ = cx.local.led.set_low();
                     }
                     0 => {
                         defmt::info!("Received 0, setting high.");
-                        cx.local.led.set_high();
+                        let _ = cx.local.led.set_high();
                     }
                     _ => {
                         defmt::info!("Noise.");
