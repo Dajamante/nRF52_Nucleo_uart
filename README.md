@@ -66,14 +66,16 @@ Most programs have the same name but I kept "uarte" and "usart" as this is how t
 | 3   | yes        | `uarte_03.rs/usart_03.rs` | Sending byte beer emoji back and forth: <br /> `nRF52 says: look at this 🍻 we got back!`                                                                                                       |
 | 4   | yes        | `lightning_04.rs`      | nRF52 is blinking the led of the nucleo 💡                                                                                                                                                      |
 | 5   | yes        | `button_05.rs`         | nRF52 is blinking the led of the nucleo 💡, but with a button                                                                                                                                   |
-| 5_bis   | yes        | `button_05_b.rs`         | The Nucleo is toggling the led of the nRF **💡 |
+| 5_b   | yes        | `button_05_b.rs`         | The Nucleo is toggling the led of the nRF **💡 |
+| 5_c   | yes        | `button_05_c.rs`         | The Nucleo is toggling the led of the nRF **💡, with COBS|
+| 5_d   | yes        | `button_05_d.rs`         | The Nucleo is toggling the led of the nRF **💡, with COBS, with a blocking buffert |
 | 6   | yes        | `postcard_06.rs`       | nRF52 is blinking the led of the nucleo 💡, with a proper instruction using [cobs](https://en.wikipedia.org/wiki/Consistent_Overhead_Byte_Stuffing) command. |
 | 7   | yes        | `pws_07.rs`            | nRF52 is dimming(*) the light of the nucleo 🔅💡🔅                                                                                                                                              |
 | 8   | yes        | `interval_08.rs`       | nRF52 is blinking the light of the nucleo, with intervals. The light can be dimmed 🔅💡🔅.                                                                                                      |
 
 *ATM the dimmer function is very bad, and need to be fixed (the incrementation must be based on a function, not magic numbers).
 
-** Special request from Twitter ⭐!
+** Special request from Twitter ⭐, to send data from the Nucleo to the nRF52 *instead*. The Nucleo can turn on the light of the nRF with one byte (0/1, program b), and with COBS (program c and d). The only difference is that in `button_05_c`, the sender and receiver send and take one byte at a time. In `button_05_d`, the whole buffer is written with a blocking write, and read as a full buffer on arrival. 
 ## RTIC
 
 All projects are written with [RTIC](https://rtic.rs/1/book/en/), a concurrency framework for Cortex-M devices.
